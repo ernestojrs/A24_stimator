@@ -1,0 +1,110 @@
+/* General page setup */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #dbeafe, #f1f5f9);
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #1e3a8a;
+    margin-top: 60px;
+    animation: slideDown 1.2s ease;
+}
+
+.subtitle {
+    color: #475569;
+    margin-bottom: 40px;
+    font-size: 1.1em;
+}
+
+/* Container for both cards */
+.cards-container {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap;
+    padding: 40px;
+}
+
+/* Individual card style */
+.home-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 280px;
+    padding: 30px;
+    transition: all 0.4s ease;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 1s ease forwards;
+}
+
+/* Second card delay (appears slightly after first) */
+.home-card:nth-child(2) {
+    animation-delay: 1s;
+}
+
+/* Hover animation */
+.home-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* SVG icon inside each card */
+.home-card svg {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 20px;
+    fill: #2563eb;
+    transition: transform 1s ease, fill 0.3s ease;
+}
+
+/* SVG hover effect */
+.home-card:hover svg {
+    fill: #1d4ed8;
+    transform: rotate(5deg) scale(1.1);
+}
+
+/* Text inside cards */
+.home-card h2 {
+    color: #1e40af;
+    margin-bottom: 10px;
+}
+
+.home-card p {
+    color: #475569;
+    font-size: 0.95em;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .home-card {
+        width: 90%;
+    }
+}

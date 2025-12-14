@@ -1,0 +1,316 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Cálculo de Costos del Equipo{% endblock %}
+
+{% block content %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Costos del Equipo</title>
+    <link rel="stylesheet" href="{% static 'styles/calculo_brigada.css' %}">
+</head>
+<body>
+    <div class="page-container">
+        <header class="header">
+            <h1>Cálculo de Costos del Equipo</h1>
+            <p class="subtitle">Configura los parámetros para estimar el costo de la brigada.</p>
+        </header>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Bloque: Tipo de horario y días de trabajo -->
+            <section class="card">
+                <h2>Horario de trabajo</h2>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="tipo_horario">Tipo de horario</label>
+                        <select id="tipo_horario" name="tipo_horario">
+                            <option value="0">Diurno</option>
+                            <option value="1">Nocturno</option>
+                            <option value="2">Feriado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cantidad_dias_de_trabajo">Cantidad de días de trabajo</label>
+                        <input type="number" id="cantidad_dias_de_trabajo" name="cantidad_dias_de_trabajo"
+                               min="1" value="1">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bloque: Recursos humanos y vehículos -->
+            <section class="card">
+                <h2>Personal y vehículos</h2>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="cantidad_supervisores">Cantidad de supervisores</label>
+                        <input type="number" id="cantidad_supervisores" name="cantidad_supervisores"
+                               min="0" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cantidad_equipos_tecnicos">Equipos técnicos</label>
+                        <input type="number" id="cantidad_equipos_tecnicos" name="cantidad_equipos_tecnicos"
+                               min="1" value="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cantidad_vehiculos">Cantidad de vehículos</label>
+                        <input type="number" id="cantidad_vehiculos" name="cantidad_vehiculos"
+                               min="0" value="1">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bloque: Dieta y alojamiento -->
+            <section class="card">
+                <h2>Dieta y alojamiento</h2>
+                <div class="grid-2">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="incluye_dieta" name="incluye_dieta">
+                            <span>Incluir dieta</span>
+                        </label>
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="incluye_alojamiento" name="incluye_alojamiento">
+                            <span>Incluir alojamiento</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group alojamiento-extra">
+                        <label for="cantidad_dias_alojamiento">Días de alojamiento</label>
+                        <input type="number" id="cantidad_dias_alojamiento" name="cantidad_dias_alojamiento"
+                               min="1" value="1">
+
+                        <label for="costo_alojamiento_por_dia">Costo alojamiento por día</label>
+                        <input type="number" id="costo_alojamiento_por_dia" name="costo_alojamiento_por_dia"
+                               min="0" step="0.01" value="2000">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bloque: Distancia y margen -->
+            <section class="card">
+                <h2>Transporte y margen</h2>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="distancia_a_recorrer_km">Distancia a recorrer (km)</label>
+                        <input type="number" id="distancia_a_recorrer_km" name="distancia_a_recorrer_km"
+                               min="0" step="0.1" value="0.0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="margen_beneficio">Margen de beneficio (%)</label>
+                        <input type="number" id="margen_beneficio" name="margen_beneficio"
+                               min="0" max="100" value="40">
+                    </div>
+                </div>
+            </section>
+
+            <div class="actions">
+                <button type="submit" class="btn-primary">Calcular Costo</button>
+                <a href="{% url 'brigadas' %}" class="btn-secondary" style="text-decoration:none; display:inline-block; text-align:center;">
+                Limpiar
+                </a>
+                
+            </div>
+        </form>
+
+        <!-- Placeholder para resultados (cuando conectes tu clase Python) -->
+
+{% if costo_personal is not None %}
+<section class="card results-card">
+    <h2>Resultados</h2>
+
+    <!-- Detalle de costos -->
+    <div class="results-grid">
+        <div class="result-item">
+            <span class="result-label">Costo Personal</span>
+            <span class="result-value">RD$ {{ costo_personal|floatformat:2 }}</span>
+        </div>
+
+        <div class="result-item">
+            <span class="result-label">Dieta Personal</span>
+            <span class="result-value">RD$ {{ costo_dieta_personal|floatformat:2 }}</span>
+        </div>
+
+        <div class="result-item">
+            <span class="result-label">Combustible</span>
+            <span class="result-value">RD$ {{ costo_combustible|floatformat:2 }}</span>
+        </div>
+
+        <div class="result-item">
+            <span class="result-label">Depreciación de Vehículo</span>
+            <span class="result-value">RD$ {{ costo_depreciacion_vehiculo|floatformat:2 }}</span>
+        </div>
+
+        <div class="result-item">
+            <span class="result-label">Depreciación Herramientas</span>
+            <span class="result-value">RD$ {{ costo_depreciacion_herramientas|floatformat:2 }}</span>
+        </div>
+
+        <div class="result-item">
+            <span class="result-label">Costo Administrativo</span>
+            <span class="result-value">RD$ {{ costo_administrativo|floatformat:2 }}</span>
+        </div>
+    </div>
+</section>
+
+<!-- 💙 TOTALES DESTACADOS SECTION -->
+<section 
+    style="
+        margin-top: 24px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 22px 24px;
+        box-shadow: 0 6px 20px rgba(15,23,42,0.08);
+    ">
+    
+    <h2 
+        style="
+            margin-top: 0;
+            margin-bottom: 14px;
+            font-size: 1.3rem;
+            color: #1e3a8a;
+            font-weight: 700;
+        ">
+        Totales de la Brigada
+    </h2>
+
+    <div 
+        style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        ">
+
+        <!-- Highlight Card -->
+        <div 
+            style="
+                flex: 1;
+                min-width: 240px;
+                background: linear-gradient(135deg, #2563eb, #1e3a8a);
+                border-radius: 14px;
+                padding: 18px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                color: white;
+                box-shadow: 0 6px 22px rgba(37,99,235,0.35);
+                transition: 0.2s;
+            ">
+            <span style="font-size: 0.9rem; color: #dbeafe;">Costo Diario de la Brigada (RD$)</span>
+            <span style="font-size: 1.6rem; font-weight: 900; color: white;">
+                RD$ {{ costo_diario_brigada_rd|floatformat:2 }}
+            </span>
+        </div>
+
+        <div 
+            style="
+                flex: 1;
+                min-width: 240px;
+                background: linear-gradient(135deg, #2563eb, #1e3a8a);
+                border-radius: 14px;
+                padding: 18px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                color: white;
+                box-shadow: 0 6px 22px rgba(37,99,235,0.35);
+            ">
+            <span style="font-size: 0.9rem; color: #dbeafe;">Costo General de la Brigada (RD$)</span>
+            <span style="font-size: 1.6rem; font-weight: 900;">RD$ {{ costo_general_brigada_rd|floatformat:2 }}</span>
+        </div>
+
+        <div 
+            style="
+                flex: 1;
+                min-width: 240px;
+                background: linear-gradient(135deg, #2563eb, #1e3a8a);
+                border-radius: 14px;
+                padding: 18px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                color: white;
+                box-shadow: 0 6px 22px rgba(37,99,235,0.35);
+            ">
+            <span style="font-size: 0.9rem; color: #dbeafe;">Costo Diario de la Brigada (USD)</span>
+            <span style="font-size: 1.6rem; font-weight: 900;">US$ {{ costo_diario_brigada_usd|floatformat:2 }}</span>
+        </div>
+
+        <div 
+            style="
+                flex: 1;
+                min-width: 240px;
+                background: linear-gradient(135deg, #2563eb, #1e3a8a);
+                border-radius: 14px;
+                padding: 18px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                color: white;
+                box-shadow: 0 6px 22px rgba(37,99,235,0.35);
+            ">
+            <span style="font-size: 0.9rem; color: #dbeafe;">Costo General de la Brigada (USD)</span>
+            <span style="font-size: 1.6rem; font-weight: 900;">US$ {{ costo_general_brigada_usd|floatformat:2 }}</span>
+        </div>
+
+        <!-- ⭐ FINAL TOTAL (BIGGER, GOLD ACCENT) -->
+        <div 
+            style="
+                flex: 1;
+                min-width: 240px;
+                background: linear-gradient(135deg, #1e40af, #1e3a8a);
+                border-radius: 14px;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                box-shadow: 0 8px 26px rgba(30,64,175,0.45);
+                border-left: 6px solid #fbbf24;
+            ">
+            <span style="font-size: 1rem; font-weight: 700; color: #fef9c3;">
+                Costo General Brigada + Beneficio (USD)
+            </span>
+            <span style="font-size: 1.8rem; font-weight: 900; color: #ffffff;">
+                US$ {{ costo_general_brigada_beneficio_usd|floatformat:2 }}
+            </span>
+        </div>
+
+    </div>
+</section>
+
+{% endif %}
+    
+    </div>
+    
+
+    <script>
+        // Deshabilitar / habilitar campos de alojamiento según el checkbox
+        const incluyeAlojamientoCheckbox = document.getElementById('incluye_alojamiento');
+        const alojamientoExtra = document.querySelector('.alojamiento-extra');
+
+        function toggleAlojamientoFields() {
+            const disabled = !incluyeAlojamientoCheckbox.checked;
+            alojamientoExtra.querySelectorAll('input').forEach(input => {
+                input.disabled = disabled;
+                alojamientoExtra.classList.toggle('disabled', disabled);
+            });
+        }
+
+        incluyeAlojamientoCheckbox.addEventListener('change', toggleAlojamientoFields);
+        // Estado inicial
+        toggleAlojamientoFields();
+    </script>
+</body>
+</html>
+
+{% endblock %}

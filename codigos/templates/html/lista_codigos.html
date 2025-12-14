@@ -1,0 +1,47 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Lista de Códigos{% endblock %}
+{% block content %}
+    <h2 class="text-center">Lista de Códigos</h2>
+    <div class = "jumbotron text-center">
+        <p class="lead">Aquí puedes ver todos los códigos disponibles.</p>
+    </div>
+
+    <form method="get" action="{% url 'lista_codigos' %}" class="form-inline justify-content-center mb-4">
+        <input 
+            type="text" 
+            name="q" 
+            class="form-control mr-2"
+            placeholder="Buscar por código o nombre"
+            value="{{ request.GET.q }}">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    <p> <hr class="my-4"></p>
+    <table class="table table-striped table-bordered">
+        <thead class ="thead-dark">
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.Codigo }}</td>
+                <td>{{ item.nombre }}</td>
+                <td>{{ item.categoria }}</td>
+                <td>
+                    <a href="{% url 'eliminar_codigo' item.id %}" class ="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No se encontraron resultados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

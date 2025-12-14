@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
+    <style>
+        .error{ color:red; font-size:0.9em; }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="login-box">
+        <div class="avatar">
+            <i class="user-icon">👤</i>
+        </div>
+
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div class="input-group">
+                <i class="icon">📧</i>
+                <input type="text" name="username" placeholder="Username" required>
+            </div>
+
+            <div class="input-group">
+                <i class="icon">🔒</i>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+
+            <div class="options">
+                <label><input type="checkbox" name="remember"> Remember me</label>
+                <a href="#">Forgot Password?</a>
+            </div>
+
+            <div class="buttons">
+                <button type="submit" class="login-btn">Login</button>
+                <button type="button"  class="register-btn"><a href="{% url 'register' %}">Register</a></button>
+            </div>
+        </form>
+          {% if error %}
+       <p class="error">{{ error }}</p>
+    {% endif %}
+    </div>
+  
+
+</body>
+</html>

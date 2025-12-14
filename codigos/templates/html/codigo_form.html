@@ -1,0 +1,17 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Agregar Código{% endblock %}   
+
+
+{% block content %}
+    <h2 class = 'jumbotron text-center'>Agregar Nuevo Código</h2>
+    <div class="jumbotron text-center">
+        <p class="lead">Aquí puedes agregar un nuevo código al sistema.</p>
+    </div>
+    <p> <hr class="my-4"></p>
+    <form  class = "jumbotron" method="post" action="">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class = "btn btn-success btn-block" type="submit">Guardar Código</button>
+    </form>
+{% endblock %}

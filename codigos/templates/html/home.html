@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Inicio</title>
+    <link rel="stylesheet" href="{% static 'styles/home.css' %}">
+</head>
+<body>
+    <h1>Bienvenido, {{ user.username }} 👋</h1>
+    <p class="subtitle">Selecciona una opción para continuar</p>
+
+    <div class="cards-container">
+        <!-- Códigos -->
+        <div class="home-card">
+           <a href="{% url 'lista_codigos' %}"><img src="{% static 'images/codigos.svg' %}" alt="Gestión de Códigos"></a>
+            <h2>Gestión de Códigos</h2>
+            <p>Consulta los códigos del inventario.</p>
+        </div>
+
+        <!-- Team Cost -->
+        <div class="home-card">
+            <a href="{% url 'brigadas' %}"><img src="{% static 'images/team.svg' %}" alt="Costos del Equipo"></a>
+            <h2>Costos de brigada</h2>
+            <p>Controla los costos de la brigada.</p>
+        </div>
+    </div>
+</body>
+</html>

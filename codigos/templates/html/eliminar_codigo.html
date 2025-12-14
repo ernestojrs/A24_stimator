@@ -1,0 +1,15 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Eliminar Código{% endblock %}
+{% block content %}
+    <h2 class="jumbotron text-center">Eliminar Código</h2>
+    <div class="jumbotron text-center">
+        <p class="lead">¿Estás seguro de que deseas eliminar el código "{{ item.Codigo }} {{ item.nombre }}"?</p>
+    </div>
+    <p> <hr class="my-4"></p>
+    <form method="post" class = 'text-center' action="">
+        {% csrf_token %}
+        <button class="btn btn-danger btn-block" type="submit">Eliminar Código</button>
+        <a href="{% url 'lista_codigos' %}" class="btn btn-secondary btn-block">Cancelar</a>
+    </form>
+{% endblock %}
