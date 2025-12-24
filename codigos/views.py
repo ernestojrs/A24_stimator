@@ -8,6 +8,7 @@ from django.views import View
 from .forms import RegisterForm, loginForm, CodigoForm
 from .models import Items, calculoFlotilla
 from django.db.models import Q
+from django.contrib import messages
 
 # Create your views here.
 
@@ -69,6 +70,7 @@ def codigo_form_view(request):
         form = CodigoForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Codigo agregado exitosamente.')  
             return redirect('lista_codigos')
     return render(request, 'html/codigo_form.html', {'form': form})
 
