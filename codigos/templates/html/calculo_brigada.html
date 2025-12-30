@@ -291,7 +291,14 @@
 {% endif %}
     
     </div>
-    
+
+    <div>
+        {% if costo_personal is not None %}
+        <a href="{% url 'exportar_brigadas_pdf' %}" class="btn-primary" style="text-decoration:none; display:inline-block; text-align:center; margin-top:20px; margin-left: 950px;">
+            Exportar Reporte a PDF
+        </a>
+        {% endif %}
+    </div>
 
     <script>
         // Deshabilitar / habilitar campos de alojamiento según el checkbox

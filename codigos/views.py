@@ -9,6 +9,9 @@ from .forms import RegisterForm, loginForm, CodigoForm
 from .models import Items, calculoFlotilla
 from django.db.models import Q
 from django.contrib import messages
+from datetime import datetime
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 # Create your views here.
 
@@ -174,5 +177,125 @@ def brigadas_view(request):
         'costo_general_brigada_beneficio_usd': costo_general_brigada_beneficio_usd,
         
        } 
+
+       results = {
+          
+          #inputs
+          "tipo_horario": tipo_horario,
+          "cantidad_dias_de_trabajo": calculo.cantidad_dias_de_trabajo,
+            "cantidad_supervisores": calculo.cantidad_supervisores,
+            "cantidad_equipos_tecnicos": calculo.cantidad_equipos_tecnicos,
+            "cantidad_vehiculos": calculo.cantidad_vehiculos,
+            "incluye_dieta": calculo.incluye_dieta,
+            "incluye_alojamiento": calculo.incluye_alojamiento,
+            "margen_beneficio": calculo.margen_beneficio,
+            "distancia_a_recorrer_km": calculo.distancia_a_recorrer_km,
+            "tasa_dolar": float(calculo.tasa_dolar),
+            "gerenated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+
+          
+          #outputs
+          "costo_personal": float(costo_personal),
+          "costo_diario_brigada_rd": float(costo_diario_brigada_rd),
+          "costo_dietas": float(costo_dietas),
+          "costo_combustible": float(costo_combustible),
+          "costo_depreciacion_vehiculo": float(costo_depreciacion_vehiculo),
+          "costo_depreciacion_herramientas": float(costo_depreciacion_herramientas),
+          "costo_administrativo": float(costo_administrativo),
+          "costo_total_brigada": float(costo_personal + costo_dietas),
+          "costo_general_brigada_rd": float(costo_general_brigada_rd),
+          "costo_diario_brigada_usd": float(costo_diario_brigada_usd),
+          "costo_general_brigada_usd": float(costo_general_brigada_usd), 
+          "costo_general_brigada_beneficio_usd": float(costo_general_brigada_beneficio_usd),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+            
+
+       }
+
+       request.session['last_brigada_results'] = results
+       request.session.modified = True
+
        return render(request, 'html/calculo_brigada.html', contexto)
     return render(request, 'html/calculo_brigada.html')
+
+# view to generate pdf report of the last brigada calculation
+@login_required(login_url='login')
+def generar_reporte_brigada_view(request):
+    results = request.session.get('last_brigada_results')
+    if not results:
+        messages.error(request, 'No hay resultados de brigada disponibles para generar el reporte.')
+        return redirect('brigadas')
+
+    # Crear el PDF
+    response = HttpResponse(content_type='application/pdf')
+    datetime_now = datetime.now().strftime("%Y%m%d")
+    response['Content-Disposition'] = f'attachment; filename="reporte_brigada_{datetime_now}.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    width, height = letter
+
+    y = height - 60
+
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, y, "Reporte de Cálculo de Brigada")
+    y -= 18
+    p.drawString(50, y, f"Generado el: {results['gerenated_at']}")
+    y -= 14
+    p.drawString(50, y, f"Tasa USD/DOP: {results['tasa_dolar']}")
+
+    y -= 24
+    def row(label, value):
+        nonlocal y
+        p.setFont("Helvetica", 12)
+        p.drawString(50, y, f"{label}:")
+        p.drawRightString(width - 50, y, f"{value}")
+        y -= 16
+
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Parámetros de Entrada")
+    y -= 20
+    for key in ['tipo_horario', 'cantidad_dias_de_trabajo', 'cantidad_supervisores',
+                'cantidad_equipos_tecnicos', 'cantidad_vehiculos', 'incluye_dieta',
+                'incluye_alojamiento', 'margen_beneficio', 'distancia_a_recorrer_km']:
+        row(key.replace('_', ' ').capitalize(), results[key])
+        if y < 50:
+            p.showPage()
+            p.setFont("Helvetica", 12)
+            y = height - 50
+
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Resultados del Cálculo")
+    y -= 20
+
+    row("Costo de Personal (DOP)", f"{results['costo_personal']:.2f}")
+    row("Dietas (DOP)", f"{results['costo_dietas']:.2f}")
+    row("Combustible (DOP)", f"{results['costo_combustible']:.2f}")
+    row("Depreciación Vehículo (DOP)", f"{results['costo_depreciacion_vehiculo']:.2f}")
+    row("Depreciación Herramientas (DOP)", f"{results['costo_depreciacion_herramientas']:.2f}")
+    row("Costo Administrativo (DOP)", f"{results['costo_administrativo']:.2f}")
+    row("Costo Total Brigada (DOP)", f"{results['costo_total_brigada']:.2f}")
+    row("Costo Diario Brigada (DOP)", f"{results['costo_diario_brigada_rd']:.2f}")
+    row("Costo General Brigada (DOP)", f"{results['costo_general_brigada_rd']:.2f}")
+    row("Costo Diario Brigada (USD)", f"{results['costo_diario_brigada_usd']:.2f}")
+    row("Costo General Brigada (USD)", f"{results['costo_general_brigada_usd']:.2f}")
+    row("Costo General + Beneficio (USD)", f"{results['costo_general_brigada_beneficio_usd']:.2f}")
+
+    y -= 8
+
+    p.setFont("Helvetica-Oblique", 14)
+    p.drawString(50, y, "Totales calculados según los parámetros ingresados.")
+
+    y -= 20
+
+    row("costo diario brigada rd", f"{results['costo_diario_brigada_rd']:.2f} DOP")
+    row("costo general brigada rd", f"{results['costo_general_brigada_rd']:.2f} DOP")
+    row("costo diario brigada usd", f"{results['costo_diario_brigada_usd']:.2f} USD")
+    row("costo general brigada usd", f"{results['costo_general_brigada_usd']:.2f} USD")
+
+    y-= 10
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Costo General + Beneficio (USD):")
+    p.drawRightString(width - 50, y, f"{results['costo_general_brigada_beneficio_usd']:.2f} USD")
+
+    p.showPage()
+    p.save()
+    return response

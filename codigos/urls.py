@@ -10,6 +10,7 @@ urlpatterns = [
     path('lista_codigos/', views.lista_codigos_view, name='lista_codigos'),
     path('eliminar_codigo/<int:codigo>/', views.eliminar_codigo_view, name='eliminar_codigo'),
     path('brigadas/', views.brigadas_view, name='brigadas'),
+    path('brigadas/exportar_pdf/', views.generar_reporte_brigada_view, name='exportar_brigadas_pdf'),
     
     # path('curso/', views.curso, name='curso'),
 ]
