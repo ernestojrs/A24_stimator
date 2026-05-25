@@ -44,7 +44,7 @@ class calculoFlotilla():
     def __init__(self):
         #combustible
         self.consumo_vehiculo = 40.0 # galones por kilometro
-        self.precio_galon = 300 # precio por galon en pesos
+        self.precio_galon = 380 # precio por galon en pesos
         #Depreciacion del vehiculo
         self.valor_vehiculo = 974000 # valor del vehiculo en pesos
         self.costo_gomas = 40000 # costo de gomas en pesos
@@ -57,8 +57,8 @@ class calculoFlotilla():
         self.tasa_dolar = get_usd_to_dop_rate()  # pesos por dolar
 
         # dietas personal
-        self.dieta_dos_tecnicos = 1600 # dieta por dia para dos tecnicos
-        self.dieta_supervisor = 1000 # dieta por dia para un supervisor
+        self.dieta_dos_tecnicos = 3000 # dieta por dia para dos tecnicos
+        self.dieta_supervisor = 1500 # dieta por dia para un supervisor
 
     def costo_personal(self, tipo_horario):
         costo_personal = 0
