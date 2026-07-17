@@ -29,6 +29,23 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'brigadas' %}">Brigadas</a>
                     </li>
+                    {% if user.profile and user.profile.role == "management" or user.profile.role == "supervisor" %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'create_assignment' %}">Crear Asignación</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'assignment_list' %}">Assignaciones</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'assignment_calendar' %}">Calendario</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'worker_directory' %}">Tecnicos</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'my_schedule' %}">Mis Asignaciones</a>
+                    </li>
                 {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'login' %}">Login</a>

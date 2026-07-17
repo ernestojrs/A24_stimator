@@ -1,0 +1,40 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}My Schedule{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">My Schedule</h2>
+
+{% if assignments %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Work Description</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Assigned By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                    <tr>
+                        <td>{{ assignment.location }}</td>
+                        <td>{{ assignment.work_description|default:"-" }}</td>
+                        <td>{{ assignment.start_date }}</td>
+                        <td>{{ assignment.end_date }}</td>
+                        <td>{{ assignment.get_status_display }}</td>
+                        <td>{{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        You do not have any assignments yet.
+    </div>
+{% endif %}
+{% endblock %}

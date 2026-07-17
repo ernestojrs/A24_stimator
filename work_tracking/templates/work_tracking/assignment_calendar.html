@@ -1,0 +1,118 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Assignment Calendar{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Assignment Calendar</h2>
+        <p class="text-muted mb-0">Monthly view of scheduled workers.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary"
+           href="{% url 'assignment_calendar' %}?year={{ previous_year }}&month={{ previous_month }}&status={{ selected_status }}&worker={{ selected_worker }}">
+            Previous
+        </a>
+        <a class="btn btn-outline-secondary"
+           href="{% url 'assignment_calendar' %}?year={{ next_year }}&month={{ next_month }}&status={{ selected_status }}&worker={{ selected_worker }}">
+            Next
+        </a>
+    </div>
+</div>
+
+<h4 class="mb-3">{{ month_name }} {{ year }}</h4>
+
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="month" value="{{ month }}">
+
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Worker</label>
+                <select name="worker" class="form-select">
+                    <option value="">All workers</option>
+                    {% for profile in workers %}
+                        <option value="{{ profile.user.id }}" {% if selected_worker == profile.user.id|stringformat:"s" %}selected{% endif %}>
+                            {{ profile.user.get_full_name|default:profile.user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <a href="{% url 'assignment_calendar' %}?year={{ year }}&month={{ month }}" class="btn btn-outline-secondary">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-bordered mb-0 calendar-table">
+            <thead class="table-light">
+                <tr class="text-center">
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in calendar_weeks %}
+                    <tr>
+                        {% for day in week %}
+                            <td style="height: 135px; min-width: 150px; vertical-align: top;"
+                                class="{% if day.month != month %}bg-light text-muted{% endif %}">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <strong>{{ day.day }}</strong>
+                                    {% if day == today %}
+                                        <span class="badge bg-primary">Today</span>
+                                    {% endif %}
+                                </div>
+
+                                {% for assignment_day, assignments in assignments_by_day.items %}
+                                    {% if assignment_day == day %}
+                                        {% for assignment in assignments %}
+                                              <a href="{% url 'assignment_detail' assignment.id %}"
+                                                class="d-block border rounded p-2 mb-2 bg-white small text-decoration-none text-dark">
+                                                    {% for worker in assignment.workers.all %}
+                                                        <strong class="d-block">
+                                                            {{ worker.get_full_name|default:worker.username }}
+                                                         </strong>
+                                                    {% empty %}
+                                                        <strong>No workers</strong>
+                                                    {% endfor %}
+                                                    <div class="text-muted">{{ assignment.location }}</div>
+                                              </a>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

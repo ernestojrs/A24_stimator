@@ -1,0 +1,114 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Work Tracking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Work Tracking</h2>
+        <p class="text-muted mb-0">Assignments, workers, and field scheduling.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+            Home
+        </a>
+
+        {% if not user.profile.is_technician %}
+            <a href="{% url 'create_assignment' %}" class="btn btn-primary">
+                Crear Asignacion
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if summary %}
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Total</div>
+                    <div class="fs-3 fw-bold">{{ summary.total }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Active</div>
+                    <div class="fs-3 fw-bold text-primary">{{ summary.active }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Completed</div>
+                    <div class="fs-3 fw-bold text-success">{{ summary.completed }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Cancelled</div>
+                    <div class="fs-3 fw-bold text-danger">{{ summary.cancelled }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-3">Upcoming Assignments</h4>
+
+                {% if upcoming_assignments %}
+                    <div class="list-group list-group-flush">
+                        {% for assignment in upcoming_assignments %}
+                            <a href="{% url 'assignment_detail' assignment.id %}" class="list-group-item list-group-item-action px-0">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ assignment.location }}</strong>
+                                    <span class="text-muted">{{ assignment.start_date }} - {{ assignment.end_date }}</span>
+                                </div>
+                                <div class="text-muted small">
+                                    {% for worker in assignment.workers.all %}
+                                        {{ worker.get_full_name|default:worker.username }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        No upcoming assignments.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-3">Quick Links</h4>
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'my_schedule' %}" class="btn btn-outline-primary">My Schedule</a>
+                    <a href="{% url 'assignment_calendar' %}" class="btn btn-outline-primary">Calendar</a>
+
+                    {% if not user.profile.is_technician %}
+                        <a href="{% url 'assignment_list' %}" class="btn btn-outline-primary">Assignments</a>
+                        <a href="{% url 'worker_directory' %}" class="btn btn-outline-primary">Workers</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

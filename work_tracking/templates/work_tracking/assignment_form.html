@@ -1,0 +1,116 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Create Assignment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="mb-4">
+            <h2 class="fw-bold mb-1">
+                {% if is_edit %}Edit Assignment{% else %}Create Assignment{% endif %}
+            </h2>
+            <p class="text-muted mb-0">
+                {% if is_edit %}
+                    Update workers, location, dates, and status.
+                {% else %}
+                    Schedule supervisors or technicians for a specific work period.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.technician.id_for_label }}">
+                            Workers
+                        </label>
+                        {{ form.workers}}
+                        <div class="form-text">
+                            Hold Ctrl to select multiple workers.
+                        </div>
+                        {% for error in form.workers.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.location.id_for_label }}">
+                            Location
+                        </label>
+                        {{ form.location }}
+                        {% for error in form.location.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ form.work_description.id_for_label }}">
+                            Work Description
+                        </label>
+                        {{ form.work_description }}
+                        {% for error in form.work_description.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.start_date.id_for_label }}">
+                                Start Date
+                            </label>
+                            {{ form.start_date }}
+                            {% for error in form.start_date.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold" for="{{ form.end_date.id_for_label }}">
+                                End Date
+                            </label>
+                            {{ form.end_date }}
+                            {% for error in form.end_date.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" for="{{ form.status.id_for_label }}">
+                            Status
+                        </label>
+                        {{ form.status }}
+                        {% for error in form.status.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        {% if is_edit %}
+                            <a href="{% url 'assignment_detail' assignment.id %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        {% else %}
+                            <a href="{% url 'my_schedule' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary px-4">
+                            {% if is_edit %}Update Assignment{% else %}Save Assignment{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Assignment Detail{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Assignment Detail</h2>
+                <p class="text-muted mb-0">Review assignment information.</p>
+            </div>
+
+            <a href="{% url 'assignment_calendar' %}" class="btn btn-outline-secondary">
+                Back to Calendar
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <span class="badge bg-secondary">
+                        {{ assignment.get_status_display }}
+                    </span>
+                </div>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Workers</dt>
+                    <dd class="col-sm-8">
+                        {% for worker in assignment.workers.all %}
+                            <div class="mb-2">
+                                <a href="{% url 'worker_profile_detail' worker.profile.id %}" class="text-decoration-none fw-semibold">
+                                     {{ worker.get_full_name|default:worker.username }}
+                                </a>
+                                <span class="badge bg-light text-dark border ms-2">
+                                    {{ worker.profile.get_role_display }}
+                                </span>
+                            </div>
+                        {% empty %}
+                            <span class="text-muted">No workers</span>
+                        {% endfor %}
+                    </dd>
+
+                    <dt class="col-sm-4">Location</dt>
+                    <dd class="col-sm-8">{{ assignment.location }}</dd>
+
+                    <dt class="col-sm-4">Description</dt>
+                    <dd class="col-sm-8">
+                        {{ assignment.work_description|default:"-" }}
+                    </dd>
+
+                    <dt class="col-sm-4">Start Date</dt>
+                    <dd class="col-sm-8">{{ assignment.start_date }}</dd>
+
+                    <dt class="col-sm-4">End Date</dt>
+                    <dd class="col-sm-8">{{ assignment.end_date }}</dd>
+
+                    <dt class="col-sm-4">Assigned By</dt>
+                    <dd class="col-sm-8">
+                        {{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}
+                    </dd>
+
+                    <dt class="col-sm-4">Created At</dt>
+                    <dd class="col-sm-8">{{ assignment.created_at }}</dd>
+                </dl>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">
+                        Assignments
+                    </a>
+
+                    {% if can_manage_assignment and assignment.status == "active" %}
+
+                         <a href="{% url 'edit_assignment' assignment.id %}" class="btn btn-outline-primary">
+                            Edit Assignment
+                         </a>
+                        <a href="{% url 'cancel_assignment' assignment.id %}" class="btn btn-outline-danger">
+                            Cancel Assignment
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

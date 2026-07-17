@@ -1,0 +1,84 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Worker Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Worker Directory</h2>
+        <p class="text-muted mb-0">Supervisors and technicians available for field assignments.</p>
+    </div>
+</div>
+
+{% if profiles %}
+    <div class="row">
+        {% for profile in profiles %}
+            <div class="col-md-6 col-xl-4 mb-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">
+                                    {{ profile.user.get_full_name|default:profile.user.username }}
+                                </h5>
+                                <span class="badge bg-primary">
+                                    {{ profile.get_role_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="mb-2">
+                            <strong>Company:</strong>
+                            {{ profile.company|default:"-" }}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Abilities:</strong>
+                            {{ profile.abilities|default:"-" }}
+                        </p>
+
+                        <p class="text-muted small mb-4">
+                            {{ profile.description|default:"No description available." }}
+                        </p>
+
+                        <a href="{% url 'worker_profile_detail' profile.id %}" class="btn btn-outline-primary btn-sm">
+                            View Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4" aria-label="Worker directory pagination">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        Previous
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        Next
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+{% else %}
+    <div class="alert alert-info">
+        No worker profiles found.
+    </div>
+{% endif %}
+{% endblock %}

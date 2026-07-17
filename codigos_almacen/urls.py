@@ -21,6 +21,7 @@ from codigos import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('codigos.urls')),  # Include the URLs from the codigos app
+    path("work-tracking/",include("work_tracking.urls")),  # Include the URLs from the work_tracking app
     #path('home/', include('codigos.urls')),
    # path('lista_codigos/', include('codigos.urls')),
     #path('codigo_form/', include('codigos.urls')),
