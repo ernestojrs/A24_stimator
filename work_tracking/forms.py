@@ -62,6 +62,10 @@ class TechnicianAssigmentForm(forms.ModelForm):
 
         self.fields["workers"].queryset = User.objects.filter(
             id__in=allowed_user_ids
+        ).order_by(
+            "first_name",
+            "last_name",
+            "username",
         )
 
         if self.instance and self.instance.pk:
