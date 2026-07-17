@@ -235,7 +235,7 @@ def assignment_detail_view(request, assignment_id):
         return redirect('my_schedule')
     
     can_manage_assignment = (
-        request.user.profile.is_management() or request.user.profile.is_admin()
+        request.user.profile.is_management() or request.user.profile.is_supervisor()
     )
     
     return render(request, 'work_tracking/assignment_detail.html', 
