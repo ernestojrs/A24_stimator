@@ -386,5 +386,31 @@ def work_tracking_dashboard_view(request):
         }
     )
 
+@login_required(login_url='login')
+def complete_assignment_view(request, assignment_id):
+    if not hasattr(request.user,"profile"):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
+    
+    if request.user.profile.is_technician():
+        messages.error(request, "You do not have a permission to complete assignments.")
+        return redirect("my_schedule")
+    
+    assignment = get_object_or_404(TechnicianAssigment, id=assignment_id)
+
+    if request.method == "POST":
+        assignment.status = TechnicianAssigment.STATUS_COMPLETED
+        assignment.save()
+        messages.success(request, "La asignacion fue completada")
+        return redirect("assignment_list")
+    
+    return render(
+        request,
+        "work_tracking/complete_assignment.html",
+        {
+            "assignment": assignment,
+        }
+    )
+
 
    

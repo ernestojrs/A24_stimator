@@ -94,7 +94,14 @@
                                     {% if assignment_day == day %}
                                         {% for assignment in assignments %}
                                               <a href="{% url 'assignment_detail' assignment.id %}"
-                                                class="d-block border rounded p-2 mb-2 bg-white small text-decoration-none text-dark">
+                                                        class="d-block border rounded p-2 mb-2 small text-decoration-none text-dark
+                                                                {% if assignment.status == 'completed' %}
+                                                                          bg-success-subtle border-success
+                                                                                {% elif assignment.status == 'cancelled' %}
+                                                                                    bg-danger-subtle border-danger
+                                                                                {% else %}
+                                                                                     bg-white
+                                                                 {% endif %}">
                                                     {% for worker in assignment.workers.all %}
                                                         <strong class="d-block">
                                                             {{ worker.get_full_name|default:worker.username }}

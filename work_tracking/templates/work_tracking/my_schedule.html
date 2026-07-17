@@ -25,7 +25,21 @@
                         <td>{{ assignment.work_description|default:"-" }}</td>
                         <td>{{ assignment.start_date }}</td>
                         <td>{{ assignment.end_date }}</td>
-                        <td>{{ assignment.get_status_display }}</td>
+                        <td>
+                            {% if assignment.status == "completed" %}
+                                <span class="badge bg-success-subtle text-success border border-success">
+                                    {{ assignment.get_status_display }}
+                                </span>
+                            {% elif assignment.status == "cancelled" %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger">
+                                    {{ assignment.get_status_display }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary">
+                                    {{ assignment.get_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
                         <td>{{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}</td>
                     </tr>
                 {% endfor %}

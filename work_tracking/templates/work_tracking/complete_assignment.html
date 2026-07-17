@@ -1,0 +1,52 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Complete Assignment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="fw-bold mb-3">Complete Assignment</h2>
+
+                <p class="text-muted">
+                    Are you sure you want to mark this assignment as completed?
+                </p>
+
+                <div class="border rounded p-3 mb-4 bg-light">
+                    <p class="mb-1">
+                        <strong>Workers:</strong>
+                        {% for worker in assignment.workers.all %}
+                            <span class="badge bg-light text-dark border">
+                                {{ worker.get_full_name|default:worker.username }}
+                            </span>
+                        {% empty %}
+                            <span class="text-muted">No workers</span>
+                        {% endfor %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Location:</strong>
+                        {{ assignment.location }}
+                    </p>
+                    <p class="mb-0">
+                        <strong>Dates:</strong>
+                        {{ assignment.start_date }} to {{ assignment.end_date }}
+                    </p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">
+                            Go Back
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            Mark Completed
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

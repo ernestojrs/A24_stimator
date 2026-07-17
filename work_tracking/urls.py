@@ -34,6 +34,12 @@ urlpatterns = [
     name="edit_assignment",
     ),
 
+    path(
+    "assignments/<int:assignment_id>/complete/",
+    views.complete_assignment_view,
+    name="complete_assignment",
+    ),
+
     
 
 ]

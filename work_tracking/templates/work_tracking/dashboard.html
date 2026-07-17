@@ -45,7 +45,7 @@
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="text-muted small">Completed</div>
+                    <div class="text-muted small">Completados</div>
                     <div class="fs-3 fw-bold text-success">{{ summary.completed }}</div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
         <div class="col-md-3 mb-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
-                    <div class="text-muted small">Cancelled</div>
+                    <div class="text-muted small">Cancelados</div>
                     <div class="fs-3 fw-bold text-danger">{{ summary.cancelled }}</div>
                 </div>
             </div>
@@ -72,14 +72,36 @@
                     <div class="list-group list-group-flush">
                         {% for assignment in upcoming_assignments %}
                             <a href="{% url 'assignment_detail' assignment.id %}" class="list-group-item list-group-item-action px-0">
-                                <div class="d-flex justify-content-between">
-                                    <strong>{{ assignment.location }}</strong>
-                                    <span class="text-muted">{{ assignment.start_date }} - {{ assignment.end_date }}</span>
-                                </div>
-                                <div class="text-muted small">
-                                    {% for worker in assignment.workers.all %}
-                                        {{ worker.get_full_name|default:worker.username }}{% if not forloop.last %}, {% endif %}
-                                    {% endfor %}
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <strong class="d-block">{{ assignment.location }}</strong>
+
+                                        <div class="text-muted small">
+                                            {% for worker in assignment.workers.all %}
+                                                {{ worker.get_full_name|default:worker.username }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </div>
+
+                                        <div class="mt-2">
+                                            {% if assignment.status == "completed" %}
+                                                <span class="badge bg-success-subtle text-success border border-success">
+                                                    {{ assignment.get_status_display }}
+                                                </span>
+                                            {% elif assignment.status == "cancelled" %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger">
+                                                    {{ assignment.get_status_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-primary-subtle text-primary border border-primary">
+                                                    {{ assignment.get_status_display }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <span class="text-muted small text-nowrap">
+                                        {{ assignment.start_date }} - {{ assignment.end_date }}
+                                    </span>
                                 </div>
                             </a>
                         {% endfor %}

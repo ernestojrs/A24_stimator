@@ -146,9 +146,19 @@
                             <td>{{ assignment.start_date }}</td>
                             <td>{{ assignment.end_date }}</td>
                             <td>
-                                <span class="badge bg-secondary">
-                                    {{ assignment.get_status_display }}
-                                </span>
+                                {% if assignment.status == "completed" %}
+                                    <span class="badge text-bg-success">
+                                        {{ assignment.get_status_display }}
+                                    </s>
+                                {% elif assignment.status == "cancelled" %}
+                                    <span class="badge text-bg-danger">
+                                        {{ assignment.get_status_display }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge text-bg-primary">
+                                        {{ assignment.get_status_display }}
+                                    </span>
+                                {% endif %}
                             </td>
                             <td>
                                 {{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}
@@ -159,7 +169,14 @@
                                         Edit
                                     </a>
 
+
+
                                     {% if assignment.status == "active" %}
+                                        <a href="{% url 'complete_assignment' assignment.id %}" class="btn btn-sm btn-outline-success">
+                                            Complete
+                                        </a>
+
+
                                         <a href="{% url 'cancel_assignment' assignment.id %}" class="btn btn-sm btn-outline-danger">
                                             Cancel
                                         </a>

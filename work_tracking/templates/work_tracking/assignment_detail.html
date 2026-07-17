@@ -19,9 +19,19 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
                 <div class="mb-4">
-                    <span class="badge bg-secondary">
-                        {{ assignment.get_status_display }}
-                    </span>
+                    {% if assignment.status == "completed" %}
+                        <span class="badge bg-success-subtle text-success border border-success">
+                            {{ assignment.get_status_display }}
+                        </span>
+                    {% elif assignment.status == "cancelled" %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger">
+                            {{ assignment.get_status_display }}
+                        </span>
+                    {% else %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary">
+                            {{ assignment.get_status_display }}
+                        </span>
+                    {% endif %}
                 </div>
 
                 <dl class="row mb-0">
@@ -73,6 +83,10 @@
 
                          <a href="{% url 'edit_assignment' assignment.id %}" class="btn btn-outline-primary">
                             Edit Assignment
+                         </a>
+
+                         <a href="{% url 'complete_assignment' assignment.id %}" class="btn btn-outline-success">
+                            Complete Assignment
                          </a>
                         <a href="{% url 'cancel_assignment' assignment.id %}" class="btn btn-outline-danger">
                             Cancel Assignment
