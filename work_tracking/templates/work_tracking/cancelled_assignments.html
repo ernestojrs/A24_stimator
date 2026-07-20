@@ -1,0 +1,73 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Cancelled Assignments{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Cancelled Assignments</h2>
+        <p class="text-muted mb-0">Assignments marked as cancelled.</p>
+    </div>
+
+    <a href="{% url 'work_tracking_dashboard' %}" class="btn btn-outline-secondary">
+        Back to Dashboard
+    </a>
+</div>
+
+{% if assignments %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Workers</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Dates</th>
+                    <th>Hours</th>
+                    <th>Cancelled At</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                    <tr>
+                        <td>
+                            {% for worker in assignment.workers.all %}
+                                <div>{{ worker.get_full_name|default:worker.username }}</div>
+                            {% empty %}
+                                <span class="text-muted">No workers</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ assignment.location }}</td>
+                        <td>{{ assignment.work_description|default:"-" }}</td>
+                        <td>{{ assignment.start_date }} - {{ assignment.end_date }}</td>
+                        <td>
+                            {% if assignment.start_time and assignment.end_time %}
+                                {{ assignment.start_time|time:"g:i A" }} - {{ assignment.end_time|time:"g:i A" }}
+                            {% else %}
+                                <span class="text-muted">Full day</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if assignment.cancelled_at %}
+                                {{ assignment.cancelled_at|date:"M d, Y h:i A" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'assignment_detail' assignment.id %}" class="btn btn-outline-primary btn-sm">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No cancelled assignments yet.
+    </div>
+{% endif %}
+{% endblock %}

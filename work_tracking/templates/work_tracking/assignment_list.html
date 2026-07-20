@@ -5,13 +5,19 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Assignments</h2>
-        <p class="text-muted mb-0">Review scheduled supervisors and technicians.</p>
+        <h2 class="fw-bold mb-1">Asignaciones</h2>
+        <p class="text-muted mb-0">All work tracking assignments.</p>
     </div>
 
-    <a href="{% url 'create_assignment' %}" class="btn btn-primary">
-        Create Assignment
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'work_tracking_dashboard' %}" class="btn btn-outline-secondary">
+            Back to Dashboard
+        </a>
+
+        <a href="{% url 'create_assignment' %}" class="btn btn-primary">
+            Crear asignacion
+        </a>
+    </div>
 </div>
 
 <div class="row mb-4">
@@ -116,8 +122,10 @@
                         <th>Location</th>
                         <th>Start</th>
                         <th>End</th>
+                        <th>Hours</th>
                         <th>Status</th>
                         <th>Assigned By</th>
+                        <th>Closed At</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -146,6 +154,13 @@
                             <td>{{ assignment.start_date }}</td>
                             <td>{{ assignment.end_date }}</td>
                             <td>
+                                {% if assignment.start_time and assignment.end_time %}
+                                    {{ assignment.start_time|time:"g:i A" }} - {{ assignment.end_time|time:"g:i A" }}
+                                {% else %}
+                                    <span class="text-muted">Full day</span>
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if assignment.status == "completed" %}
                                     <span class="badge text-bg-success">
                                         {{ assignment.get_status_display }}
@@ -160,9 +175,21 @@
                                     </span>
                                 {% endif %}
                             </td>
+
+                            
                             <td>
                                 {{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}
                             </td>
+
+                            <td>
+                            {% if assignment.status == "completed" and assignment.completed_at %}
+                                {{ assignment.completed_at|date:"M d, Y h:i A" }}
+                            {% elif assignment.status == "cancelled" and assignment.cancelled_at %}
+                                {{ assignment.cancelled_at|date:"M d, Y h:i A" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
                             <td>
                                 <div class="d-flex gap-2">
                                     <a href="{% url 'edit_assignment' assignment.id %}" class="btn btn-sm btn-outline-primary">

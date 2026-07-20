@@ -5,10 +5,53 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Worker Directory</h2>
-        <p class="text-muted mb-0">Supervisors and technicians available for field assignments.</p>
+        <h2 class="fw-bold mb-1">Workers</h2>
+        <p class="text-muted mb-0">Technicians and supervisors.</p>
     </div>
+
+    <a href="{% url 'work_tracking_dashboard' %}" class="btn btn-outline-secondary">
+        Back to Dashboard
+    </a>
 </div>
+
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Search</label>
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control"
+                    placeholder="Name, username, company, abilities..."
+                    value="{{ selected_search }}"
+                >
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Role</label>
+                <select name="role" class="form-select">
+                    <option value="">All roles</option>
+                    {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if selected_role == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    Filter
+                </button>
+
+                <a href="{% url 'worker_directory' %}" class="btn btn-outline-secondary">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
 
 {% if profiles %}
     <div class="row">
@@ -54,9 +97,7 @@
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                        Previous
-                    </a>
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ selected_search }}&role={{ selected_role }}">Previous</a>
                 </li>
             {% endif %}
 
@@ -68,7 +109,7 @@
 
             {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ selected_search }}&role={{ selected_role }}">
                         Next
                     </a>
                 </li>

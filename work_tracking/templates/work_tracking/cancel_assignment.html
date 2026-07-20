@@ -36,6 +36,18 @@
 
                 <form method="post">
                     {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="cancel_reason" class="form-label fw-semibold">
+                            Cancel Reason
+                        </label>
+                        <textarea
+                            id="cancel_reason"
+                            name="cancel_reason"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Explain why this assignment was cancelled..."
+                        ></textarea>
+                    </div>
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">
                             Go Back

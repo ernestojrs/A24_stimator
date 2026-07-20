@@ -14,7 +14,9 @@
                     <th>Work Description</th>
                     <th>Start Date</th>
                     <th>End Date</th>
+                    <th>Hours</th>
                     <th>Status</th>
+                    <th>Closed At</th>
                     <th>Assigned By</th>
                 </tr>
             </thead>
@@ -26,6 +28,13 @@
                         <td>{{ assignment.start_date }}</td>
                         <td>{{ assignment.end_date }}</td>
                         <td>
+                            {% if assignment.start_time and assignment.end_time %}
+                                {{ assignment.start_time|time:"g:i A" }} - {{ assignment.end_time|time:"g:i A" }}
+                            {% else %}
+                                <span class="text-muted">Full day</span>
+                            {% endif %}
+                        </td>
+                       <td>
                             {% if assignment.status == "completed" %}
                                 <span class="badge bg-success-subtle text-success border border-success">
                                     {{ assignment.get_status_display }}
@@ -40,6 +49,17 @@
                                 </span>
                             {% endif %}
                         </td>
+
+                        <td>
+                            {% if assignment.status == "completed" and assignment.completed_at %}
+                                {{ assignment.completed_at|date:"M d, Y h:i A" }}
+                            {% elif assignment.status == "cancelled" and assignment.cancelled_at %}
+                                {{ assignment.cancelled_at|date:"M d, Y h:i A" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
                         <td>{{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}</td>
                     </tr>
                 {% endfor %}

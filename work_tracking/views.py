@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404
 import calendar
 from datetime import date
 from django.core.paginator import Paginator
+from django.utils import timezone
+from django.db.models import Q
 
 # Create your views here.
 
@@ -36,7 +38,13 @@ def create_assignment_view(request):
             return redirect('assignment_list')
         
     else:
-        form = TechnicianAssigmentForm(current_user=request.user)
+        form = TechnicianAssigmentForm(
+            current_user=request.user,
+            initial={
+                "start_date": request.GET.get("start_date",""),
+                "end_date": request.GET.get("end_date",""),
+            }
+        )
 
     return render(request, 'work_tracking/assignment_form.html', {'form': form})
 
@@ -116,6 +124,8 @@ def cancel_assignment_view(request, assignment_id):
 
     if request.method == 'POST':
         assignment.status = TechnicianAssigment.STATUS_CANCELLED
+        assignment.cancel_reason = request.POST.get("cancel_reason","").strip()
+        assignment.cancelled_at = timezone.now()
         assignment.save()
         messages.success(request, "Assignment cancelled successfully.")
         return redirect('assignment_list')
@@ -220,7 +230,7 @@ def assignment_calendar_view(request):
     )
 
 @login_required(login_url='login')
-def assignment_detail_view(request, assignment_id):
+def assignment_detail_view(request, assignment_id): 
     assignment = get_object_or_404(
         TechnicianAssigment.objects.select_related('assigned_by',).prefetch_related("workers", "workers__profile"),
         id=assignment_id,
@@ -230,7 +240,7 @@ def assignment_detail_view(request, assignment_id):
         messages.error(request, "You do not have a profile. Please contact the administrator.")
         return redirect('my_schedule')
     
-    if request.user.profile.is_technician() and assignment.workers.filter(id=request.user.id).exists:
+    if request.user.profile.is_technician() and assignment.workers.filter(id=request.user.id).exists():
         messages.error(request, "You do not have permission to view this assignment.")
         return redirect('my_schedule')
     
@@ -290,7 +300,24 @@ def worker_directory_view(request):
             UserProfile.ROLE_SUPERVISOR,
             UserProfile.ROLE_TECHNICIAN,
         ]
-    ).order_by("role", "user__first_name", "user__last_name", "user__username")
+    )
+
+    search = request.GET.get ("search", "").strip()
+    role = request.GET.get("role","")
+
+    if search:
+        profiles = profiles.filter(
+            Q(user__first_name__icontains=search) 
+            | Q(user__last_name__icontains=search)
+            | Q(user__username__icontains=search)
+            | Q(company__icontains=search)
+            | Q(abilities__icontains=search)
+        )
+
+    if role:
+        profiles = profiles.filter(role=role)
+
+    profiles = profiles.order_by("role", "user__first_name", "user__last_name", "user__username")
 
     paginator = Paginator(profiles,9)
     page_number = request.GET.get("page")
@@ -302,6 +329,12 @@ def worker_directory_view(request):
         {
             "profiles": page_obj,
             "page_obj":page_obj,
+            "selected_search": search,
+            "selected_role": role,
+            "role_choices": [
+                (UserProfile.ROLE_SUPERVISOR, "Supervisor"),
+                (UserProfile.ROLE_TECHNICIAN, "Technician"),
+            ]
         },
     )
 
@@ -359,23 +392,33 @@ def work_tracking_dashboard_view(request):
         upcoming_assignments = TechnicianAssigment.objects.filter(
             workers = request.user,
             status = TechnicianAssigment.STATUS_ACTIVE,
-        ).select_related("assigned_by").prefetch_related("workers",).order_by("start_date")[:5]
+            end_date__gte = date.today(),
+        ).select_related("assigned_by").prefetch_related("workers",).order_by("start_date", "start_time")[:5]
 
         summary = None
 
     else:
 
         upcoming_assignments = TechnicianAssigment.objects.filter(
-            status = TechnicianAssigment.STATUS_ACTIVE
-        ).select_related("assigned_by",).prefetch_related("workers",).order_by("start_date")[:5]
+            status = TechnicianAssigment.STATUS_ACTIVE,
+            end_date__gte = date.today(),
+        ).select_related("assigned_by",).prefetch_related("workers",).order_by("start_date", "start_time")[:5]
 
         summary_queryset = TechnicianAssigment.objects.all()
+        today = date.today()
         summary = {
             "total" : summary_queryset.count(),
             "active" :summary_queryset.filter(status = TechnicianAssigment.STATUS_ACTIVE).count(),
+            "today": summary_queryset.filter(
+                status = TechnicianAssigment.STATUS_ACTIVE,
+                start_date__lte = today,
+                end_date__gte = today,
+            ).count(),
             "completed" :summary_queryset.filter(status = TechnicianAssigment.STATUS_COMPLETED).count(),
             "cancelled" :summary_queryset.filter(status = TechnicianAssigment.STATUS_CANCELLED).count(),
         }
+
+
 
     return render(
         request,
@@ -400,6 +443,8 @@ def complete_assignment_view(request, assignment_id):
 
     if request.method == "POST":
         assignment.status = TechnicianAssigment.STATUS_COMPLETED
+        assignment.completion_notes = request.POST.get("completion_notes","").strip()
+        assignment.completed_at = timezone.now()
         assignment.save()
         messages.success(request, "La asignacion fue completada")
         return redirect("assignment_list")
@@ -411,6 +456,98 @@ def complete_assignment_view(request, assignment_id):
             "assignment": assignment,
         }
     )
+
+@login_required(login_url="login")
+def todays_assignments_view(request):
+    if not hasattr(request.user, 'profile'):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
+    
+    today = date.today()
+
+    assignments = TechnicianAssigment.objects.filter(
+        status = TechnicianAssigment.STATUS_ACTIVE,
+        start_date__lte = today,
+        end_date__gte=today,
+    ).select_related("assigned_by").prefetch_related("workers").order_by("start_time", "location")
+
+    if request.user.profile.is_technician():
+        assignments = assignments.filter(workers = request.user)
+
+    return render(
+        request,
+        "work_tracking/todays_assignments.html",
+        {
+            "assignments": assignments,
+            "today": today
+        }
+    )
+
+@login_required(login_url='login')
+def completed_assignments_view(request):
+    if not hasattr(request.user, "profile"):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
+    
+    assignments = TechnicianAssigment.objects.filter(
+        status = TechnicianAssigment.STATUS_COMPLETED,
+    ).select_related("assigned_by").prefetch_related("workers").order_by("-completed_at","-end_date")
+
+    if request.user.profile.is_technician():
+        assignments = assignments.filter(workers = request.user)
+
+    return render(
+        request,
+        "work_tracking/completed_assignments.html",
+        {
+            "assignments": assignments,
+        }
+    )
+
+@login_required(login_url='login')
+def cancelled_assignments_view(request):
+    if not hasattr(request.user, "profile"):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
+    
+    assignments = TechnicianAssigment.objects.filter(
+        status=TechnicianAssigment.STATUS_CANCELLED,
+    ).select_related("assigned_by").prefetch_related("workers").order_by("-cancelled_at", "-end_date")
+
+    if request.user.profile.is_technician():
+        assignments = assignments.filter(workers=request.user)
+
+    return render(
+        request,
+        "work_tracking/cancelled_assignments.html",
+        {
+            "assignments": assignments,
+        }
+    )
+
+@login_required(login_url="login")
+def active_assignments_view(request):
+    if not hasattr(request.user, "profile"):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
+
+    assignments = TechnicianAssigment.objects.filter(
+        status=TechnicianAssigment.STATUS_ACTIVE,
+    ).select_related("assigned_by").prefetch_related("workers").order_by("start_date", "start_time")
+
+    if request.user.profile.is_technician():
+        assignments = assignments.filter(workers=request.user)
+
+    return render(
+        request,
+        "work_tracking/active_assignments.html",
+        {
+            "assignments": assignments,
+        }
+    )
+
+
+
 
 
    

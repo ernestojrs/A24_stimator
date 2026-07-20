@@ -36,6 +36,18 @@
 
                 <form method="post">
                     {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="completion_notes" class="form-label fw-semibold">
+                            Completion Notes
+                        </label>
+                        <textarea
+                            id="completion_notes"
+                            name="completion_notes"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Describe the completed work, results, or important notes..."
+                        ></textarea>
+                    </div>
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">
                             Go Back

@@ -10,6 +10,16 @@
     </div>
 
     <div class="d-flex gap-2">
+
+         <a href="{% url 'work_tracking_dashboard' %}" class="btn btn-outline-secondary">
+            Back to Dashboard
+        </a>
+
+        {% if not user.profile.is_technician %}
+            <a href="{% url 'create_assignment' %}" class="btn btn-primary">
+                Create Assignment
+            </a>
+        {% endif %}
         <a class="btn btn-outline-secondary"
            href="{% url 'assignment_calendar' %}?year={{ previous_year }}&month={{ previous_month }}&status={{ selected_status }}&worker={{ selected_worker }}">
             Previous
@@ -84,7 +94,15 @@
                             <td style="height: 135px; min-width: 150px; vertical-align: top;"
                                 class="{% if day.month != month %}bg-light text-muted{% endif %}">
                                 <div class="d-flex justify-content-between mb-2">
-                                    <strong>{{ day.day }}</strong>
+                                    {% if not user.profile.is_technician %}
+                                        <a href="{% url 'create_assignment' %}?start_date={{ day|date:'Y-m-d' }}&end_date={{ day|date:'Y-m-d' }}"
+                                        class="fw-bold text-decoration-none">
+                                            {{ day.day }}
+                                        </a>
+                                    {% else %}
+                                        <strong>{{ day.day }}</strong>
+                                    {% endif %}
+
                                     {% if day == today %}
                                         <span class="badge bg-primary">Today</span>
                                     {% endif %}

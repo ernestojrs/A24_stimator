@@ -56,34 +56,34 @@ class TechnicianAssigment(models.Model):
     work_description = models.TextField(blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField()
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     created_at = models.DateTimeField(auto_now_add=True)
+    completion_notes = models.TextField(blank=True)
+    cancel_reason = models.TextField(blank=True)
+    completed_at = models.DateTimeField(null=True,blank=True)
+    cancelled_at = models.DateTimeField(null=True,blank=True)
 
     def clean(self):
         from django.core.exceptions import ValidationError
 
-        if self.end_date < self.start_date:
-            raise ValidationError("End date cannot be earlier than start date.")
-        '''if self.end_date < self.start_date:
-            raise ValidationError("End date cannot be earlier than start date.")
-        if not hasattr(self.technician, 'profile'):
-            raise ValidationError("The selected technician does not have a profile.")
-        if self.technician.profile.role == UserProfile.ROLE_MANAGEMENT:
-            raise ValidationError("management users cannot be scheduled")
-        
-        overlapping_assignments = TechnicianAssigment.objects.filter(
-            technician=self.technician,
-            status=self.STATUS_ACTIVE,
-            start_date__lte=self.end_date,
-            end_date__gte=self.start_date
-        )
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError("End date cannot be earlier than start date.")            
 
-        if self.pk:
-            overlapping_assignments = overlapping_assignments.exclude(pk=self.pk)
-
-        if overlapping_assignments.exists():
-            raise ValidationError("This worker has overlapping assignments during the specified period.")'''
+        if bool(self.start_time) != bool(self.end_time):
+            raise ValidationError(" tiempo de inicio y fin deben ser utilizados")
         
+        if (
+            self.start_date
+            and self.end_date
+            and self.start_time
+            and self.end_time
+            and self.start_date == self.end_date
+            and self.end_time <= self.start_time
+        ):
+            raise ValidationError("Tiempo de fin debe ser despeus del inicio.")
+   
     def save(self, *args, **kwargs):
         self.full_clean()  # This will call the clean method
         super().save(*args, **kwargs)   
@@ -124,7 +124,38 @@ class AssignmentMember(models.Model):
         if self.assignment_id:
             overlapping_assignments = overlapping_assignments.exclude(assignment_id=self.assignment_id)
 
-        if overlapping_assignments.exists():
+        has_overlap = False
+
+        for member in overlapping_assignments.select_related("assignment"):
+            existing = member.assignment
+
+            existing_has_time = existing.start_time and existing.end_time
+            new_has_time = self.assignment.start_time and self.assignment.end_time
+
+            if not existing_has_time or not new_has_time:
+                has_overlap = True
+                break
+
+            same_day = (
+                existing.start_date == existing.end_date
+                and self.assignment.start_date == self.assignment.end_date
+                and existing.start_date == self.assignment.start_date
+            )
+
+            if not same_day:
+                has_overlap = True
+                break
+
+            times_overlap = (
+                existing.start_time < self.assignment.end_time
+                and existing.end_time > self.assignment.start_time
+            )
+
+            if times_overlap:
+                has_overlap = True
+                break
+
+        if has_overlap:
             raise ValidationError("This worker has overlapping assignments during the specified period.")
         
     def save(self, *args, **kwargs):

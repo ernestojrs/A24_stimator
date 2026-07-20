@@ -40,6 +40,11 @@ urlpatterns = [
     name="complete_assignment",
     ),
 
+    path("today/", views.todays_assignments_view, name="todays_assignments"),
+    path("completed/", views.completed_assignments_view, name="completed_assignments"),
+    path("cancelled/", views.cancelled_assignments_view, name="cancelled_assignments"),
+    path("active/", views.active_assignments_view, name="active_assignments"),
+
     
 
 ]

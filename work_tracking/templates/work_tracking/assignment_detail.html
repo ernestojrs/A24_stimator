@@ -65,6 +65,15 @@
                     <dt class="col-sm-4">End Date</dt>
                     <dd class="col-sm-8">{{ assignment.end_date }}</dd>
 
+                    <dt class="col-sm-4">Hours</dt>
+                    <dd class="col-sm-8">
+                        {% if assignment.start_time and assignment.end_time %}
+                            {{ assignment.start_time|time:"g:i A" }} - {{ assignment.end_time|time:"g:i A" }}
+                        {% else %}
+                            <span class="text-muted">Full day</span>
+                        {% endif %}
+                    </dd>
+
                     <dt class="col-sm-4">Assigned By</dt>
                     <dd class="col-sm-8">
                         {{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }}
@@ -73,6 +82,44 @@
                     <dt class="col-sm-4">Created At</dt>
                     <dd class="col-sm-8">{{ assignment.created_at }}</dd>
                 </dl>
+
+                {% if assignment.status == "completed" %}
+                    <div class="mt-4 p-3 border rounded bg-success-subtle">
+                        <h5 class="mb-2 text-success">Completion Notes</h5>
+
+                        {% if assignment.completed_at %}
+                            <p class="mb-2">
+                                <strong>Completed At:</strong>
+                                {{ assignment.completed_at|date:"M d, Y h:i A" }}
+                            </p>
+                        {% endif %}
+
+                        {% if assignment.completion_notes %}
+                            <p class="mb-0">{{ assignment.completion_notes }}</p>
+                        {% else %}
+                            <p class="mb-0 text-muted">No completion notes were added.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if assignment.status == "cancelled" %}
+                    <div class="mt-4 p-3 border rounded bg-danger-subtle">
+                        <h5 class="mb-2 text-danger">Cancel Reason</h5>
+
+                        {% if assignment.cancelled_at %}
+                            <p class="mb-2">
+                                <strong>Cancelled At:</strong>
+                                {{ assignment.cancelled_at|date:"M d, Y h:i A" }}
+                            </p>
+                        {% endif %}
+
+                        {% if assignment.cancel_reason %}
+                            <p class="mb-0">{{ assignment.cancel_reason }}</p>
+                        {% else %}
+                            <p class="mb-0 text-muted">No cancel reason was added.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
 
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">

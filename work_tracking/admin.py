@@ -19,12 +19,27 @@ class AssignmentMemberInline(admin.TabularInline):
 
 @admin.register(TechnicianAssigment)
 class TechnicianAssigmentAdmin(admin.ModelAdmin):
-    list_display = ('workers_list', 'assigned_by', 'location', 'start_date', 'end_date', 'status', 'created_at')
+    list_display = ('workers_list', 'assigned_by', 'location', 'start_date', 'end_date', 'status','completed_at','cancelled_at', 'created_at')
     search_fields = ('workers__username','workers__first_name', 'workers__last_name', 'location', 'work_description', 
                      'assigned_by__username', 'assigned_by__first_name', 'assigned_by__last_name')
-    list_filter = ('status', 'start_date', 'end_date')
+    list_filter = ('status', 'start_date', 'end_date', 'completed_at', 'cancelled_at')
     ordering = ('-created_at',)
-    readonly_fields = ('created_at',)
+    readonly_fields = ('created_at','completed_at', 'cancelled_at')
+    fields = (
+        'location',
+        'work_description',
+        'start_date',
+        'end_date',
+        'start_time',
+        'end_time',
+        'status',
+        'completion_notes',
+        'completed_at',
+        'cancel_reason',
+        'cancelled_at',
+        'assigned_by',
+        'created_at',
+    )
 
     inlines = [AssignmentMemberInline]
 
