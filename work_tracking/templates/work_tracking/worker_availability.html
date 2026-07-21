@@ -1,0 +1,146 @@
+{% extends 'html/layout.html' %}
+
+{% block title %}Worker Availability{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Worker Availability</h2>
+        <p class="text-muted mb-0">Check who is free before creating an assignment.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'work_tracking_dashboard' %}" class="btn btn-outline-secondary">
+            Back to Dashboard
+        </a>
+
+        {% if has_search %}
+            <a href="{% url 'create_assignment' %}?start_date={{ selected_start_date }}&end_date={{ selected_end_date }}&start_time={{ selected_start_time }}&end_time={{ selected_end_time }}"
+            class="btn btn-primary">
+                Create Assignment
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Start Date</label>
+                <input type="date" name="start_date" class="form-control" value="{{ selected_start_date }}" required>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">End Date</label>
+                <input type="date" name="end_date" class="form-control" value="{{ selected_end_date }}" required>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Start Time</label>
+                <input type="time" name="start_time" class="form-control" value="{{ selected_start_time }}">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">End Time</label>
+                <input type="time" name="end_time" class="form-control" value="{{ selected_end_time }}">
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    Check
+                </button>
+                <a href="{% url 'worker_availability' %}" class="btn btn-outline-secondary">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% if has_search %}
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold text-success mb-3">
+                        Personal Disponible
+                    </h4>
+
+                    {% if available_workers %}
+                        <div class="list-group list-group-flush">
+                            {% for profile in available_workers %}
+                                <a href="{% url 'create_assignment' %}?start_date={{ selected_start_date }}&end_date={{ selected_end_date }}&start_time={{ selected_start_time }}&end_time={{ selected_end_time }}&worker={{ profile.user.id }}"
+                                        class="list-group-item list-group-item-action px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ profile.user.get_full_name|default:profile.user.username }}</strong>
+                                            <div class="text-muted small">{{ profile.company|default:"-" }}</div>
+                                        </div>
+                                        <span class="badge bg-success-subtle text-success border border-success">
+                                            {{ profile.get_role_display }}
+                                        </span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-0">
+                            No workers are available for this period.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold text-danger mb-3">
+                        Personal Ocupado
+                    </h4>
+
+                    {% if busy_worker_details %}
+                        <div class="list-group list-group-flush">
+                            {% for item in busy_worker_details %}
+                                <a href="{% url 'worker_profile_detail' item.profile.id %}" class="list-group-item list-group-item-action px-0">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <strong>{{ item.profile.user.get_full_name|default:item.profile.user.username }}</strong>
+                                            <div class="text-muted small">{{ item.profile.company|default:"-" }}</div>
+
+                                            {% for assignment in item.assignments %}
+                                                <div class="small mt-2 text-danger">
+                                                    Busy: {{ assignment.location }}
+                                                    <br>
+                                                    {{ assignment.start_date }} - {{ assignment.end_date }}
+                                                    {% if assignment.start_time and assignment.end_time %}
+                                                        <br>
+                                                        {{ assignment.start_time|time:"g:i A" }} - {{ assignment.end_time|time:"g:i A" }}
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <span class="badge bg-danger-subtle text-danger border border-danger">
+                                            {{ item.profile.get_role_display }}
+                                        </span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success mb-0">
+                            No workers are busy for this period.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        Select a date range to check availability.
+    </div>
+{% endif %}
+{% endblock %}

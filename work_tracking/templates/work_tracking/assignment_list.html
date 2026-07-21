@@ -17,6 +17,11 @@
         <a href="{% url 'create_assignment' %}" class="btn btn-primary">
             Crear asignacion
         </a>
+
+        <a href="{% url 'export_assignments_csv' %}?status={{ selected_status }}&worker={{ selected_worker }}&start_date={{ selected_start_date }}&end_date={{ selected_end_date }}"
+        class="btn btn-outline-success">
+            Export CSV
+        </a>
     </div>
 </div>
 

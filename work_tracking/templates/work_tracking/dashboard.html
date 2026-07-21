@@ -162,6 +162,7 @@
 
                     {% if not user.profile.is_technician %}
                         <a href="{% url 'assignment_list' %}" class="btn btn-outline-primary">Assignments</a>
+                        <a href="{% url 'worker_availability' %}" class="btn btn-outline-primary">Availability</a>
                         <a href="{% url 'worker_directory' %}" class="btn btn-outline-primary">Workers</a>
                     {% endif %}
                 </div>

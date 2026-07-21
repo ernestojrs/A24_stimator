@@ -44,6 +44,8 @@ urlpatterns = [
     path("completed/", views.completed_assignments_view, name="completed_assignments"),
     path("cancelled/", views.cancelled_assignments_view, name="cancelled_assignments"),
     path("active/", views.active_assignments_view, name="active_assignments"),
+    path("availability/", views.worker_availability_view, name="worker_availability"),
+    path("assignments/export/csv/", views.export_assignments_csv_view, name="export_assignments_csv"),
 
     
 

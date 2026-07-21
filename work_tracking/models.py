@@ -27,6 +27,11 @@ class UserProfile(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
 
+    timezone = models.CharField(
+        max_length=50,
+        default="America/Santo_Domingo"
+    )
+
     def is_management(self):
         return self.role == self.ROLE_MANAGEMENT
     def is_supervisor(self):

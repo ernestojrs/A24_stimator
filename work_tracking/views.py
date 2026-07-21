@@ -5,10 +5,12 @@ from .forms import TechnicianAssigmentForm
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 import calendar
-from datetime import date
+from datetime import date, datetime
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.db.models import Q
+import csv
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -38,13 +40,23 @@ def create_assignment_view(request):
             return redirect('assignment_list')
         
     else:
-        form = TechnicianAssigmentForm(
-            current_user=request.user,
-            initial={
+
+        initial_data={
                 "start_date": request.GET.get("start_date",""),
                 "end_date": request.GET.get("end_date",""),
+                "start_time": request.GET.get("start_time", ""),
+                "end_time": request.GET.get("end_time", ""),
             }
+        worker_id = request.GET.get("worker")
+
+        if worker_id:
+            initial_data["workers"] = [worker_id]
+        form = TechnicianAssigmentForm(
+            current_user=request.user,
+            initial = initial_data,            
         )
+
+        
 
     return render(request, 'work_tracking/assignment_form.html', {'form': form})
 
@@ -109,6 +121,84 @@ def assignment_list_view(request):
                    "status_choices": TechnicianAssigment.STATUS_CHOICES,
                    "summary": summary,
                    })
+
+@login_required(login_url='login')
+def export_assignments_csv_view(request):
+    if not hasattr(request.user, "profile"):
+        messages.error(request, "You do not have a profile. Please contact the administrator.")
+        return redirect("my_schedule")
+
+    if request.user.profile.is_technician():
+        messages.error(request, "Technicians cannot export all assignments.")
+        return redirect("my_schedule")
+    
+    assignments = TechnicianAssigment.objects.prefetch_related(
+        "workers",
+        "workers__profile"
+    ).select_related("assigned_by").order_by("-start_date", "-created_at")
+
+    status = request.GET.get("status","")
+    worker_id = request.GET.get("worker", "")
+    start_date = request.GET.get ("start_date","")
+    end_date = request.GET.get("end_date","")
+
+    if status:
+        assignments = assignments.filter(status=status)
+
+    if worker_id:
+        assignments = assignments.filter(workers__id=worker_id)
+
+    if start_date:
+        assignments = assignments.filter(end_date__gte=start_date)
+
+    if end_date:
+        assignments = assignments.filter(start_date__lte=end_date)
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="assignments.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "ID",
+        "Status",
+        "Workers",
+        "Location",
+        "Description",
+        "Start Date",
+        "End Date",
+        "Start Time",
+        "End Time",
+        "Assigned By",
+        "Created At",
+        "Completed At",
+        "Cancelled At",
+    ])
+
+    for assignment in assignments:
+        workers = ", ".join([
+            worker.get_full_name() or worker.username
+            for worker in assignment.workers.all()
+        ])
+
+        assigned_by = assignment.assigned_by.get_full_name() or assignment.assigned_by.username
+
+        writer.writerow([
+            assignment.id,
+            assignment.get_status_display(),
+            workers,
+            assignment.location,
+            assignment.work_description,
+            assignment.start_date,
+            assignment.end_date,
+            assignment.start_time or "",
+            assignment.end_time or "",
+            assigned_by,
+            assignment.created_at,
+            assignment.completed_at or "",
+            assignment.cancelled_at or "",
+        ])
+
+    return response
 
 @login_required(login_url='login')
 def cancel_assignment_view(request, assignment_id):
@@ -384,6 +474,7 @@ def edit_assignment_view(request, assignment_id):
 
 @login_required(login_url="login")
 def work_tracking_dashboard_view(request):
+
     if not hasattr(request.user, "profile"):
         messages.error(request, "Your user does not have a worker profile")
         return redirect("my_schedule")
@@ -428,6 +519,110 @@ def work_tracking_dashboard_view(request):
             "upcoming_assignments": upcoming_assignments,
         }
     )
+
+@login_required(login_url='login')
+def worker_availability_view(request):
+    if not hasattr(request.user, "profile"):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
+    
+    if request.user.profile.is_technician():
+        messages.error(request, "You do not have permission to view worker availability.")
+        return redirect("my_schedule")
+    
+    start_date_value = request.GET.get("start_date", "")
+    end_date_value = request.GET.get("end_date","")
+    start_time_value = request.GET.get("start_time","")
+    end_time_value = request.GET.get("end_time","")
+
+    available_workers = []
+    busy_workers = []
+    busy_worker_details = []
+    has_search = bool(start_date_value and end_date_value)
+
+    workers = UserProfile.objects.select_related("user").filter(
+        role__in = [
+            UserProfile.ROLE_SUPERVISOR,
+            UserProfile.ROLE_TECHNICIAN,
+        ]
+    ).order_by("user__first_name", "user__last_name", "user__username")
+
+    if has_search:
+        start_date = datetime.strptime(start_date_value, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date_value, "%Y-%m-%d").date()
+
+        start_time = None
+        end_time = None
+
+        if start_time_value and end_time_value:
+            start_time = datetime.strptime(start_time_value, "%H:%M").time()
+            end_time = datetime.strptime(end_time_value,"%H:%M").time()
+
+        for profile in workers:
+            overlaps = TechnicianAssigment.objects.filter(
+                workers = profile.user,
+                status = TechnicianAssigment.STATUS_ACTIVE,
+                start_date__lte = end_date,
+                end_date__gte = start_date,
+            ).prefetch_related("workers")
+
+            is_busy = False
+            busy_assignments = []
+
+            for assignment in overlaps:
+                existing_has_time = assignment.start_time and assignment.end_time
+                new_has_time = start_time and end_time
+
+                if not existing_has_time or not new_has_time:
+                    is_busy = True
+                    busy_assignments.append(assignment)
+                    break
+
+                same_day = (
+                    assignment.start_date == assignment.end_date
+                    and start_date == end_date
+                    and assignment.start_date == start_date
+                )
+
+                if not same_day:
+                    is_busy = True
+                    busy_assignments.append(assignment)
+                    break
+
+                times_overlap = assignment.start_time < end_time and assignment.end_time > start_time
+
+                if times_overlap:
+                    is_busy = True
+                    busy_assignments.append(assignment)
+                    break
+
+            if is_busy:
+                busy_workers.append(profile)
+                busy_worker_details.append({
+                    "profile": profile,
+                    "assignments": busy_assignments,
+                })
+            else:
+                available_workers.append(profile)
+
+    return render(
+        request,
+        "work_tracking/worker_availability.html",
+        {
+            "workers":workers,
+            "available_workers": available_workers,
+            "busy_workers": busy_workers,
+            "has_search": has_search,
+            "selected_start_date": start_date_value,
+            "selected_start_time": start_time_value,
+            "selected_end_date": end_date_value,
+            "selected_end_time": end_time_value,
+            "busy_worker_details": busy_worker_details,
+
+        },
+    )
+
+
 
 @login_required(login_url='login')
 def complete_assignment_view(request, assignment_id):
