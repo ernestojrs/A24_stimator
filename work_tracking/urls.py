@@ -46,6 +46,7 @@ urlpatterns = [
     path("active/", views.active_assignments_view, name="active_assignments"),
     path("availability/", views.worker_availability_view, name="worker_availability"),
     path("assignments/export/csv/", views.export_assignments_csv_view, name="export_assignments_csv"),
+    path("workload/", views.worker_workload_view, name="worker_workload"),
 
     
 

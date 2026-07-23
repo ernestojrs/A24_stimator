@@ -8,7 +8,7 @@ import calendar
 from datetime import date, datetime
 from django.core.paginator import Paginator
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q,Count
 import csv
 from django.http import HttpResponse
 
@@ -154,10 +154,11 @@ def export_assignments_csv_view(request):
     if end_date:
         assignments = assignments.filter(start_date__lte=end_date)
 
-    response = HttpResponse(content_type="text/csv")
+    response = HttpResponse(content_type="text/csv, charset=utf-8-sig")
     response["Content-Disposition"] = 'attachment; filename="assignments.csv"'
 
     writer = csv.writer(response)
+    response.write("\ufeff")
     writer.writerow([
         "ID",
         "Status",
@@ -181,6 +182,10 @@ def export_assignments_csv_view(request):
         ])
 
         assigned_by = assignment.assigned_by.get_full_name() or assignment.assigned_by.username
+
+        created_at = timezone.localtime(assignment.created_at).strftime("%Y-%m-%d %I:%M %p") if assignment.created_at else ""
+        completed_at = timezone.localtime(assignment.completed_at).strftime("%Y-%m-%d %I:%M %p") if assignment.completed_at else ""
+        cancelled_at = timezone.localtime(assignment.cancelled_at).strftime("%Y-%m-%d %I:%M %p") if assignment.cancelled_at else ""
 
         writer.writerow([
             assignment.id,
@@ -622,7 +627,55 @@ def worker_availability_view(request):
         },
     )
 
+@login_required(login_url='login')
+def worker_workload_view(request):
+    if not hasattr(request.user, "profile"):
+        messages.error(request, "Your user does not have a worker profile")
+        return redirect("my_schedule")
 
+    if request.user.profile.is_technician():
+        messages.error(request, "You do not have permission to view worker workload.")
+        return redirect("my_schedule")
+
+    today = date.today()
+    profiles = UserProfile.objects.select_related("user").filter(
+        role__in=[
+            UserProfile.ROLE_SUPERVISOR,
+            UserProfile.ROLE_TECHNICIAN,
+        ]
+    ).annotate(
+        active_count = Count(
+            "user__work_assignments",
+            filter=Q(user__work_assignments__status = TechnicianAssigment.STATUS_ACTIVE),
+            distinct=True,
+        ),
+        upcoming_count = Count(
+            "user__work_assignments",
+            filter=Q(
+                user__work_assignments__status = TechnicianAssigment.STATUS_ACTIVE,
+                user__work_assignments__end_date__gte = today,
+            ),
+            distinct=True,
+        ),
+        today_count = Count(
+            "user__work_assignments",
+            filter= Q(
+                user__work_assignments__status =TechnicianAssigment.STATUS_ACTIVE,
+                user__work_assignments__start_date__lte = today,
+                user__work_assignments__end_date__gte = today,
+            ),
+            distinct=True
+        ),
+    ).order_by("-today_count", "-upcoming_count", "user__first_time","user__last_name","user__username")
+
+    return render(
+        request,
+        "work_tracking/worker_workload.html",
+        {
+            "profile":profiles,
+            "today":today,
+        },
+    )
 
 @login_required(login_url='login')
 def complete_assignment_view(request, assignment_id):
