@@ -445,6 +445,10 @@ def edit_assignment_view(request, assignment_id):
     
     assignment = get_object_or_404(TechnicianAssigment, id=assignment_id)
 
+    if not request.user.profile.is_management() and assignment.status != TechnicianAssigment.STATUS_ACTIVE:
+        messages.error(request, "Only management can edit completed or cancelled assignments.")
+        return redirect("assignment_detail", assignment_id=assignment.id)
+
     if request.method == 'POST':
         form = TechnicianAssigmentForm(
             request.POST,
@@ -638,12 +642,26 @@ def worker_workload_view(request):
         return redirect("my_schedule")
 
     today = date.today()
+    search = request.GET.get("search","").strip()
+    role = request.GET.get("role","")
     profiles = UserProfile.objects.select_related("user").filter(
         role__in=[
             UserProfile.ROLE_SUPERVISOR,
             UserProfile.ROLE_TECHNICIAN,
         ]
-    ).annotate(
+    )
+    if search:
+        profiles = profiles.filter(
+        Q(user__first_name__icontains=search)
+        | Q(user__last_name__icontains=search)
+        | Q(user__username__icontains=search)
+        | Q(company__icontains=search)
+        )
+
+    if role:
+        profiles = profiles.filter(role=role)
+
+    profiles = profiles.annotate(
         active_count = Count(
             "user__work_assignments",
             filter=Q(user__work_assignments__status = TechnicianAssigment.STATUS_ACTIVE),
@@ -666,14 +684,20 @@ def worker_workload_view(request):
             ),
             distinct=True
         ),
-    ).order_by("-today_count", "-upcoming_count", "user__first_time","user__last_name","user__username")
+    ).order_by("-today_count", "-upcoming_count", "user__first_name","user__last_name","user__username")
 
     return render(
         request,
         "work_tracking/worker_workload.html",
         {
-            "profile":profiles,
+            "profiles":profiles,
             "today":today,
+            "selected_search": search,
+            "selected_role": role,
+            "role_choices":[
+                (UserProfile.ROLE_SUPERVISOR, "Supervisor"),
+                (UserProfile.ROLE_TECHNICIAN, "Technician"),
+            ],
         },
     )
 

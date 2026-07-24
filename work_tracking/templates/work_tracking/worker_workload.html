@@ -14,6 +14,45 @@
     </a>
 </div>
 
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Search</label>
+                <input
+                    type="text"
+                    name="search"
+                    class="form-control"
+                    placeholder="Name, username, company..."
+                    value="{{ selected_search }}"
+                >
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Role</label>
+                <select name="role" class="form-select">
+                    <option value="">All roles</option>
+                    {% for value, label in role_choices %}
+                        <option value="{{ value }}" {% if selected_role == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    Filter
+                </button>
+
+                <a href="{% url 'worker_workload' %}" class="btn btn-outline-secondary">
+                    Clear
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
 <div class="card border-0 shadow-sm">
     <div class="card-body p-4">
         {% if profiles %}
@@ -39,19 +78,28 @@
                                 <td>{{ profile.get_role_display }}</td>
                                 <td>{{ profile.company|default:"-" }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-info-subtle text-info border border-info">
-                                        {{ profile.today_count }}
-                                    </span>
+                                    <a href="{% url 'assignment_list' %}?status=active&worker={{ profile.user.id }}&start_date={{ today|date:'Y-m-d' }}&end_date={{ today|date:'Y-m-d' }}"
+                                    class="text-decoration-none">
+                                        <span class="badge bg-info-subtle text-info border border-info">
+                                            {{ profile.today_count }}
+                                        </span>
+                                    </a>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary-subtle text-primary border border-primary">
-                                        {{ profile.upcoming_count }}
-                                    </span>
+                                    <a href="{% url 'assignment_list' %}?worker={{ profile.user.id }}"
+                                    class="text-decoration-none">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary">
+                                            {{ profile.upcoming_count }}
+                                        </span>
+                                    </a>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-dark">
-                                        {{ profile.active_count }}
-                                    </span>
+                                    <a href="{% url 'assignment_list' %}?status=active&worker={{ profile.user.id }}"
+                                    class="text-decoration-none">
+                                        <span class="badge bg-dark">
+                                            {{ profile.active_count }}
+                                        </span>
+                                    </a>
                                 </td>
                                 <td class="text-end">
                                     <a href="{% url 'worker_profile_detail' profile.id %}" class="btn btn-outline-primary btn-sm">
